@@ -61,8 +61,8 @@ public:
   Group& getGroup( unsigned num, Group& group ) const EXCEPT ( FieldNotFound );
   void removeGroup( unsigned num, const Group& group );
   void removeGroup( const Group& group );
-  bool hasGroup( const Group& group );
-  bool hasGroup( unsigned num, const Group& group );
+  bool hasGroup( const Group& group ) const;
+  bool hasGroup( unsigned num, const Group& group ) const;
 
 private:
   int m_field;

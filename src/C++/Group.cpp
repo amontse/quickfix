@@ -52,12 +52,12 @@ void Group::removeGroup( const Group& group )
   FieldMap::removeGroup( group.field() );
 }
 
-bool Group::hasGroup( unsigned num, const Group& group )
+bool Group::hasGroup( unsigned num, const Group& group ) const
 {
   return FieldMap::hasGroup( num, group.field() );
 }
 
-bool Group::hasGroup( const Group& group )
+bool Group::hasGroup( const Group& group ) const
 {
   return FieldMap::hasGroup( group.field() );
 }
