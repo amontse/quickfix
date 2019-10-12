@@ -24,6 +24,15 @@ cd build
 cmake  -DHAVE_SSL=ON -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX:PATH="install-path" -DOPENSSL_ROOT_DIR="path to openssl" ..
 Then build in Visual Studio or on command prompt.
 
+With Visual Studio 2019
+mkdir build
+cd build
+cmake -G "Visual Studio 16 2019" -A x64 -DHAVE_SSL=ON -DCMAKE_INSTALL_PREFIX:PATH="install-path" -DOPENSSL_ROOT_DIR="path to openssl" ..
+cmake --build . --config Release
+cmake --build . --config Debug
+cmake --install . --config Release
+cmake --install . --config Debug
+
 On Linux (with system openssl),
 
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DHAVE_SSL=ON -DCMAKE_INSTALL_PREFIX:PATH="install-path" ..
