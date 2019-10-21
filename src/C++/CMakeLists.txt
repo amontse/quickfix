@@ -25,7 +25,6 @@ set(quickfix_SOURCES
   MessageStore.cpp
   MySQLLog.cpp
   MySQLStore.cpp
-  SQLiteStore.cpp
   NullStore.cpp
   OdbcLog.cpp
   OdbcStore.cpp
@@ -66,10 +65,10 @@ endif()
 if (WIN32)
   add_library(${PROJECT_NAME} STATIC  ${quickfix_SOURCES})
   set_target_properties (${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX d)
-  target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES} ${MYSQL_CLIENT_LIBS} ${PostgreSQL_LIBRARIES} ${SQLite3_LIBRARIES} ws2_32)
+  target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES} ${MYSQL_CLIENT_LIBS} ${PostgreSQL_LIBRARIES} ws2_32)
 else()
   add_library(${PROJECT_NAME} SHARED  ${quickfix_SOURCES})
-  target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES} ${MYSQL_CLIENT_LIBS} ${PostgreSQL_LIBRARIES} ${SQLite3_LIBRARIES} pthread)
+  target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES} ${MYSQL_CLIENT_LIBS} ${PostgreSQL_LIBRARIES} pthread)
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/C++)
