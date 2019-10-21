@@ -8,18 +8,18 @@
 
 #include "MessageStore.h"
 #include "SessionSettings.h"
-#include "sqlite3.h"
-#include <fstream>
+#include "SQLiteCpp/SQLiteCpp.h"
 #include <string>
 
 namespace FIX
 {
-	static const std::string DEFAULT_DATABASE;
-
 	/// Creates a MySQL based implementation of MessageStore.
 	class SQLiteStoreFactory : public MessageStoreFactory
 	{
 	public:
+
+		static const std::string DEFAULT_DATABASE;
+
 		SQLiteStoreFactory(const SessionSettings& settings)
 			: m_settings(settings), m_useSettings(true), m_useDictionary(false)
 		{
@@ -54,28 +54,39 @@ namespace FIX
 	class SQLiteStore : public MessageStore
 	{
 	public:
-		SQLiteStore(const std::string& database);
+		SQLiteStore(const SessionID& s, const std::string& database);
 		~SQLiteStore();
 
-		bool set(int, const std::string&) EXCEPT(IOException);
-		void get(int, int, std::vector < std::string >&) const EXCEPT(IOException);
+		bool set(int, const std::string&);
+		void get(int, int, std::vector <std::string>&) const;
 
-		int getNextSenderMsgSeqNum() const EXCEPT(IOException);
-		int getNextTargetMsgSeqNum() const EXCEPT(IOException);
-		void setNextSenderMsgSeqNum(int value) EXCEPT(IOException);
-		void setNextTargetMsgSeqNum(int value) EXCEPT(IOException);
-		void incrNextSenderMsgSeqNum() EXCEPT(IOException);
-		void incrNextTargetMsgSeqNum() EXCEPT(IOException);
+		int getNextSenderMsgSeqNum() const;
+		int getNextTargetMsgSeqNum() const;
+		void setNextSenderMsgSeqNum(int value);
+		void setNextTargetMsgSeqNum(int value);
+		void incrNextSenderMsgSeqNum();
+		void incrNextTargetMsgSeqNum();
 
-		UtcTimeStamp getCreationTime() const EXCEPT(IOException);
+		UtcTimeStamp getCreationTime() const;
 
-		void reset() EXCEPT(IOException);
-		void refresh() EXCEPT(IOException);
+		void reset();
+		void refresh();
 
 	private:
 		void populateCache();
 
 		MemoryStore m_cache;
+		SessionID m_sessionID;
+		SQLite::Database m_db;
+		mutable SQLite::Statement m_stmt_insert_messages;
+		mutable SQLite::Statement m_stmt_update_messages;
+		mutable SQLite::Statement m_stmt_select_messages;
+		mutable SQLite::Statement m_stmt_update_outgoing_seqnum;
+		mutable SQLite::Statement m_stmt_update_incoming_seqnum;
+		mutable SQLite::Statement m_stmt_delete_messages;
+		mutable SQLite::Statement m_stmt_update_sessions;
+		mutable SQLite::Statement m_stmt_select_sessions;
+		mutable SQLite::Statement m_stmt_insert_sessions;
 	};
 } // namespace FIX
 
