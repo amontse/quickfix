@@ -12,36 +12,13 @@
 #include "FieldConvertors.h"
 #include "Parser.h"
 #include "Utility.h"
-
-#include <memory>
-
 #include "strptime.h"
-#include <fstream>
+#include "SQLiteUtils.h"
+#include <memory>
 
 namespace FIX
 {
 	const std::string SQLiteStoreFactory::DEFAULT_DATABASE = "quickfix";
-
-	struct SQLiteStatementReset
-	{
-		SQLiteStatementReset(SQLite::Statement& stmt) : m_raii(&stmt) {}
-
-		struct statement_reset
-		{
-			void operator()(SQLite::Statement* stmt)
-			{
-				if (stmt != 0)
-				{
-					stmt->tryReset();
-					stmt->clearBindings();
-					//std::cout << "Statement " << stmt->getQuery() << " is reset." << std::endl;
-				}
-			}
-		};
-
-	private:
-		std::unique_ptr<SQLite::Statement, statement_reset> m_raii;
-	};
 
 	MessageStore* SQLiteStoreFactory::create(const SessionID& s)
 	{
@@ -108,46 +85,6 @@ namespace FIX
 			" incoming_seqnum INTEGER NOT NULL, "
 			" outgoing_seqnum INTEGER NOT NULL, "
 			" PRIMARY KEY(beginstring, sendercompid, targetcompid, session_qualifier))");
-
-		m_db.exec("create table if not exists event_log ("
-			" id INTEGER PRIMARY KEY, "
-			" time TEXT NOT NULL, "
-			" time_milliseconds INTEGER NOT NULL, "
-			" beginstring TEXT, "
-			" sendercompid TEXT, "
-			" targetcompid TEXT, "
-			" session_qualifier TEXT, "
-			" text BLOB NOT NULL)");
-
-		m_db.exec("create table if not exists event_backup_log ("
-			" id INTEGER PRIMARY KEY, "
-			" time TEXT NOT NULL, "
-			" time_milliseconds INTEGER NOT NULL, "
-			" beginstring TEXT, "
-			" sendercompid TEXT, "
-			" targetcompid TEXT, "
-			" session_qualifier TEXT, "
-			" text BLOB NOT NULL)");
-
-		m_db.exec("create table if not exists messages_log ("
-			" id INTEGER PRIMARY KEY, "
-			" time TEXT NOT NULL, "
-			" time_milliseconds INTEGER NOT NULL, "
-			" beginstring TEXT, "
-			" sendercompid TEXT, "
-			" targetcompid TEXT, "
-			" session_qualifier TEXT, "
-			" text BLOB NOT NULL)");
-
-		m_db.exec("create table if not exists messages_backup_log ("
-			" id INTEGER PRIMARY KEY, "
-			" time TEXT NOT NULL, "
-			" time_milliseconds INTEGER NOT NULL, "
-			" beginstring TEXT, "
-			" sendercompid TEXT, "
-			" targetcompid TEXT, "
-			" session_qualifier TEXT, "
-			" text BLOB NOT NULL)");
 
 		m_db.exec("create table if not exists messages ("
 			" beginstring TEXT NOT NULL, "
@@ -412,7 +349,7 @@ namespace FIX
 				::strptime(sqlTime.c_str(), "%Y-%m-%d %H:%M:%S", &time);
 			}
 		}
-		catch (std::exception & e)
+		catch (std::exception&)
 		{
 			throw ConfigError("No entries found for session in database");
 		}
@@ -451,7 +388,7 @@ namespace FIX
 			{
 				m_stmt_insert_sessions.exec();
 			}
-			catch (std::exception & e)
+			catch (std::exception&)
 			{
 				throw ConfigError("Unable to create session in database");
 			}
