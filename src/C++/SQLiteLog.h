@@ -1,7 +1,7 @@
 #ifndef HAVE_SQLITE3
 #error SQLiteLog.h included, but HAVE_SQLITE3 not defined
 #endif
-#define HAVE_SQLITE3= 1
+
 #ifdef HAVE_SQLITE3
 #ifndef FIX_SQLITELOG_H
 #define FIX_SQLITELOG_H
@@ -9,6 +9,7 @@
 #include "Log.h"
 #include "SessionSettings.h"
 #include "SQLiteCpp/SQLiteCpp.h"
+#include "SQLiteUtils.h"
 #include <memory>
 #include <string>
 

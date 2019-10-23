@@ -3,7 +3,7 @@
 #else
 #include "config.h"
 #endif
-#define HAVE_SQLITE3=1
+
 #ifdef HAVE_SQLITE3
 
 #include "SQLiteLog.h"
