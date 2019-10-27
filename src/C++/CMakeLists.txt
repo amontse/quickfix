@@ -65,6 +65,10 @@ if (HAVE_SSL)
     UtilitySSL.cpp)
 endif()
 
+if (MSVC)
+  set (quickfix_SOURCES ${quickfix_SOURCES} strptime.c)
+endif()
+
 if (WIN32)
   add_library(${PROJECT_NAME} STATIC  ${quickfix_SOURCES})
   set_target_properties (${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX d)
