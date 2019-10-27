@@ -44,6 +44,8 @@ set(quickfix_SOURCES
   SocketInitiator.cpp
   SocketMonitor.cpp
   SocketServer.cpp
+  SQLiteLog.cpp
+  SQLiteStore.cpp
   stdafx.cpp
   ThreadedSocketAcceptor.cpp
   ThreadedSocketConnection.cpp

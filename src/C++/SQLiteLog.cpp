@@ -86,8 +86,6 @@ namespace FIX
 			{
 				if (m_stmt_delete_incoming_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_delete_incoming_table);
-
 					m_stmt_delete_incoming_table->exec(
 						m_pSessionID->getBeginString().getValue()
 						, m_pSessionID->getSenderCompID().getValue()
@@ -97,8 +95,6 @@ namespace FIX
 
 				if (m_stmt_delete_outgoing_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_delete_outgoing_table);
-
 					m_stmt_delete_outgoing_table->exec(
 						m_pSessionID->getBeginString().getValue()
 						, m_pSessionID->getSenderCompID().getValue()
@@ -108,8 +104,6 @@ namespace FIX
 
 				if (m_stmt_delete_event_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_delete_event_table);
-
 					m_stmt_delete_event_table->exec(
 						m_pSessionID->getBeginString().getValue()
 						, m_pSessionID->getSenderCompID().getValue()
@@ -121,19 +115,16 @@ namespace FIX
 			{
 				if (m_stmt_delete_incoming_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_delete_incoming_table);
 					m_stmt_delete_incoming_table->exec();
 				}
 
 				if (m_stmt_delete_outgoing_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_delete_outgoing_table);
 					m_stmt_delete_outgoing_table->exec();
 				}
 
 				if (m_stmt_delete_event_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_delete_event_table);
 					m_stmt_delete_event_table->exec();
 				}
 			}
@@ -168,44 +159,39 @@ namespace FIX
 			{
 				if (m_stmt_insert_incoming_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_insert_incoming_table);
-
-					m_stmt_insert_incoming_table->exec(
-						m_pSessionID->getBeginString().getValue()
+					m_stmt_insert_incoming_table->exec(sqlTime, millis
+						, m_pSessionID->getBeginString().getValue()
 						, m_pSessionID->getSenderCompID().getValue()
 						, m_pSessionID->getTargetCompID().getValue()
-						, m_pSessionID->getSessionQualifier());
+						, m_pSessionID->getSessionQualifier(), value);
 				}
 			}
 			else
 			{
 				if (m_stmt_insert_incoming_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_insert_incoming_table);
-					m_stmt_insert_incoming_table->exec();
+					m_stmt_insert_incoming_table->exec(sqlTime, millis, value);
 				}
 			}
 		}
-		else if (table == m_stmt_insert_outgoing_table)
+		else if (table == m_outgoingTable)
 		{
 			if (m_pSessionID)
 			{
 				if (m_stmt_insert_outgoing_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_insert_outgoing_table);
-					m_stmt_insert_outgoing_table->exec(
-						m_pSessionID->getBeginString().getValue()
+					m_stmt_insert_outgoing_table->exec(sqlTime, millis
+						, m_pSessionID->getBeginString().getValue()
 						, m_pSessionID->getSenderCompID().getValue()
 						, m_pSessionID->getTargetCompID().getValue()
-						, m_pSessionID->getSessionQualifier());
+						, m_pSessionID->getSessionQualifier(), value);
 				}
 			}
 			else
 			{
 				if (m_stmt_insert_outgoing_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_insert_outgoing_table);
-					m_stmt_insert_outgoing_table->exec();
+					m_stmt_insert_outgoing_table->exec(sqlTime, millis, value);
 				}
 			}
 		}
@@ -215,20 +201,18 @@ namespace FIX
 			{
 				if (m_stmt_insert_event_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_insert_event_table);
-					m_stmt_insert_event_table->exec(
-						m_pSessionID->getBeginString().getValue()
+					m_stmt_insert_event_table->exec(sqlTime, millis
+						, m_pSessionID->getBeginString().getValue()
 						, m_pSessionID->getSenderCompID().getValue()
 						, m_pSessionID->getTargetCompID().getValue()
-						, m_pSessionID->getSessionQualifier());
+						, m_pSessionID->getSessionQualifier(), value);
 				}
 			}
 			else
 			{
 				if (m_stmt_insert_event_table)
 				{
-					SQLiteStatementReset stmt_reset(*m_stmt_insert_event_table);
-					m_stmt_insert_event_table->exec();
+					m_stmt_insert_event_table->exec(sqlTime, millis, value);
 				}
 			}
 		}
