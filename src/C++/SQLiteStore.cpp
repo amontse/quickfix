@@ -19,7 +19,7 @@
 
 namespace FIX
 {
-	const std::string SQLiteStoreFactory::DEFAULT_DATABASE = "quickfix";
+	const std::string SQLiteStoreFactory::DEFAULT_DATABASE = "quickfix.db";
 
 	MessageStore* SQLiteStoreFactory::create(const SessionID& s)
 	{
@@ -46,7 +46,7 @@ namespace FIX
 	{
 		std::string database = DEFAULT_DATABASE;
 		
-		try { database = settings.getString(MYSQL_STORE_DATABASE); }
+		try { database = settings.getString(SQLITE_STORE_DATABASE); }
 		catch (ConfigError&) {}
 
 		return new SQLiteStore(s, database);
