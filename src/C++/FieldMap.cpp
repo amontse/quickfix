@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <iterator>
 #include <deque>
+#include <limits>
 
 namespace FIX
 {
@@ -234,7 +235,8 @@ int FieldMap::calculateLength( int beginStringField,
                                int bodyLengthField,
                                int checkSumField ) const
 {
-  int result = 0;
+  //int result = 0;
+  size_t result = 0;
   Fields::const_iterator i;
   for ( i = m_fields.begin(); i != m_fields.end(); ++i )
   {
@@ -250,9 +252,11 @@ int FieldMap::calculateLength( int beginStringField,
   {
     std::vector < FieldMap* > ::const_iterator k;
     for ( k = j->second.begin(); k != j->second.end(); ++k )
-      result += ( *k ) ->calculateLength();
+      //result += ( *k ) ->calculateLength();
+		result += static_cast<size_t>((*k)->calculateLength());
   }
-  return result;
+  //return result;
+  return (result > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(result));
 }
 
 int FieldMap::calculateTotal( int checkSumField ) const

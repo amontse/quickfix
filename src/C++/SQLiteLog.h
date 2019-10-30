@@ -10,6 +10,7 @@
 #include "SessionSettings.h"
 #include "SQLiteCpp/SQLiteCpp.h"
 #include "SQLiteUtils.h"
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -36,7 +37,8 @@ namespace FIX
 			m_stmt.bind(4, sendercompid);
 			m_stmt.bind(5, targetcompid);
 			m_stmt.bind(6, session_qualifier);
-			m_stmt.bind(7, value.c_str(), value.size());
+			m_stmt.bind(7, value.c_str()
+				, (value.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(value.size())));
 
 			return m_stmt.exec();
 		}
@@ -52,7 +54,8 @@ namespace FIX
 			m_stmt.bind(4);
 			m_stmt.bind(5);
 			m_stmt.bind(6);
-			m_stmt.bind(7, value.c_str(), value.size());
+			m_stmt.bind(7, value.c_str()
+				, (value.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(value.size())));
 
 			return m_stmt.exec();
 		}

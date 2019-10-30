@@ -15,6 +15,7 @@
 #include "strptime.h"
 #include "SQLiteUtils.h"
 #include <memory>
+#include <limits>
 
 namespace FIX
 {
@@ -114,7 +115,8 @@ namespace FIX
 			m_stmt_insert_messages.bind(3, m_sessionID.getTargetCompID().getValue());
 			m_stmt_insert_messages.bind(4, m_sessionID.getSessionQualifier());
 			m_stmt_insert_messages.bind(5, msgSeqNum);
-			m_stmt_insert_messages.bind(6, msg.c_str(), msg.size());
+			m_stmt_insert_messages.bind(6, msg.c_str()
+				, (msg.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(msg.size())));
 
 			query = m_stmt_insert_messages.getExpandedSQL();
 
@@ -122,11 +124,12 @@ namespace FIX
 			{
 				m_stmt_insert_messages.exec();
 			}
-			catch (std::exception & e)
+			catch (std::exception&)
 			{
 				SQLiteStatementReset stmt_reset(m_stmt_update_messages);
 
-				m_stmt_update_messages.bind(1, msg.c_str(), msg.size());
+				m_stmt_update_messages.bind(1, msg.c_str()
+					, (msg.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(msg.size())));
 				m_stmt_update_messages.bind(2, m_sessionID.getBeginString().getValue());
 				m_stmt_update_messages.bind(3, m_sessionID.getSenderCompID().getValue());
 				m_stmt_update_messages.bind(4, m_sessionID.getTargetCompID().getValue());

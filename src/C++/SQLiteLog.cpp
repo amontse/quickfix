@@ -131,7 +131,7 @@ namespace FIX
 
 			transaction.commit();
 		}
-		catch (std::exception & e)
+		catch (std::exception&)
 		{
 
 		}

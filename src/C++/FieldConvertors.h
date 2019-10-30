@@ -344,7 +344,9 @@ static bool convert( const std::string& value, double& result )
   if( *i || !haveDigit ) return false;
     
   int processed_chars;
-  const int total_length = value.length();
+  //const int total_length = value.length();
+#undef max
+  const int total_length = (value.length() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(value.length()));
   const double val = fast_strtod( value.c_str(), total_length, &processed_chars);
 
   if ( processed_chars != total_length ||
@@ -467,10 +469,12 @@ struct UtcTimeStampConvertor
   static UtcTimeStamp convert( const std::string& value )
   EXCEPT ( FieldConvertError )
   {
-    size_t len = value.size();
+    //size_t len = value.size();
+	int len = (value.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(value.size()));
     if (len < 17 || len > 27) throw FieldConvertError(value);
 
-    size_t i = 0;
+    //size_t i = 0;
+	int i = 0;
     int c = 0;
     for( c = 0; c < 8; ++c )
       if( !IS_DIGIT(value[i++]) ) throw FieldConvertError(value);
@@ -574,10 +578,12 @@ struct UtcTimeOnlyConvertor
   static UtcTimeOnly convert( const std::string& value)
   EXCEPT ( FieldConvertError )
   {
-    size_t len = value.size();
+    //size_t len = value.size();
+	int len = (value.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(value.size()));
     if (len < 8 || len > 18) throw FieldConvertError(value);
 
-    size_t i = 0;
+    //size_t i = 0;
+	int i = 0;
     int c = 0;
     for( c = 0; c < 2; ++c )
       if( !IS_DIGIT(value[i++]) ) throw FieldConvertError(value);
