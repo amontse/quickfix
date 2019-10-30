@@ -30,11 +30,13 @@ namespace FIX
 		{
 		}
 
-		SQLiteStoreFactory(const std::string& database) : m_database(database)
+		SQLiteStoreFactory(const std::string& database) 
+			: m_database(database), m_useSettings(false), m_useDictionary(false)
 		{
 		}
 
-		SQLiteStoreFactory() : m_database(DEFAULT_DATABASE)
+		SQLiteStoreFactory() 
+			: m_database(DEFAULT_DATABASE), m_useSettings(false), m_useDictionary(false)
 		{
 		}
 
