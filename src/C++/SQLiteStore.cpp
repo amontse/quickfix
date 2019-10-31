@@ -55,27 +55,6 @@ namespace FIX
 	SQLiteStore::SQLiteStore(const SessionID& s, const std::string& database)
 		: m_sessionID(s)
 		, m_db(database, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE)
-		, m_stmt_insert_messages(m_db, "insert into messages "
-			"(beginstring, sendercompid, targetcompid, session_qualifier, msgseqnum, message) "
-			"values (?,?,?,?,?,?)")
-		, m_stmt_update_messages(m_db, "update messages set message=? where "
-			"beginstring = ? and sendercompid = ? and targetcompid = ? and session_qualifier = ? ")
-		, m_stmt_select_messages(m_db, "select message from messages where "
-			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=? and "
-			"msgseqnum>=? and msgseqnum<=?")
-		, m_stmt_update_outgoing_seqnum(m_db, "update sessions set outgoing_seqnum=? where "
-			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?")
-		, m_stmt_update_incoming_seqnum(m_db, "update sessions set incoming_seqnum=? where "
-			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?")
-		, m_stmt_delete_messages(m_db, "delete from messages where "
-			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?")
-		, m_stmt_update_sessions(m_db, "update sessions set creation_time=?, "
-			"incoming_seqnum=?, outgoing_seqnum=? where "
-			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?")
-		, m_stmt_select_sessions(m_db, "select creation_time, incoming_seqnum, outgoing_seqnum FROM sessions where "
-			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?")
-		, m_stmt_insert_sessions(m_db, "insert into sessions (beginstring, sendercompid, targetcompid, session_qualifier,"
-			"creation_time, incoming_seqnum, outgoing_seqnum) VALUES(?,?,?,?,?,?,?)")
 	{
 		m_db.exec("create table if not exists sessions ("
 			" beginstring TEXT NOT NULL, "
@@ -95,6 +74,28 @@ namespace FIX
 			" msgseqnum INTEGER NOT NULL, "
 			" message BLOB NOT NULL, "
 			" PRIMARY KEY(beginstring, sendercompid, targetcompid, session_qualifier, msgseqnum))");
+
+		m_stmt_insert_messages = std::make_unique<SQLite::Statement>(m_db, "insert into messages "
+			"(beginstring, sendercompid, targetcompid, session_qualifier, msgseqnum, message) "
+			"values (?,?,?,?,?,?)");
+		m_stmt_update_messages = std::make_unique<SQLite::Statement>(m_db, "update messages set message=? where "
+			"beginstring = ? and sendercompid = ? and targetcompid = ? and session_qualifier = ? ");
+		m_stmt_select_messages = std::make_unique<SQLite::Statement>(m_db, "select message from messages where "
+			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=? and "
+			"msgseqnum>=? and msgseqnum<=?");
+		m_stmt_update_outgoing_seqnum = std::make_unique<SQLite::Statement>(m_db, "update sessions set outgoing_seqnum=? where "
+			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?");
+		m_stmt_update_incoming_seqnum = std::make_unique<SQLite::Statement>(m_db, "update sessions set incoming_seqnum=? where "
+			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?");
+		m_stmt_delete_messages = std::make_unique<SQLite::Statement>(m_db, "delete from messages where "
+			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?");
+		m_stmt_update_sessions = std::make_unique<SQLite::Statement>(m_db, "update sessions set creation_time=?, "
+			"incoming_seqnum=?, outgoing_seqnum=? where "
+			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?");
+		m_stmt_select_sessions = std::make_unique<SQLite::Statement>(m_db, "select creation_time, incoming_seqnum, outgoing_seqnum FROM sessions where "
+			"beginstring=? and sendercompid=? and targetcompid=? and session_qualifier=?");
+		m_stmt_insert_sessions = std::make_unique<SQLite::Statement>(m_db, "insert into sessions (beginstring, sendercompid, targetcompid, session_qualifier,"
+			"creation_time, incoming_seqnum, outgoing_seqnum) VALUES(?,?,?,?,?,?,?)");
 	}
 
 	SQLiteStore::~SQLiteStore()
@@ -108,36 +109,36 @@ namespace FIX
 
 		try
 		{
-			SQLiteStatementReset stmt_reset(m_stmt_insert_messages);
+			SQLiteStatementReset stmt_reset(*m_stmt_insert_messages);
 
-			m_stmt_insert_messages.bind(1, m_sessionID.getBeginString().getValue());
-			m_stmt_insert_messages.bind(2, m_sessionID.getSenderCompID().getValue());
-			m_stmt_insert_messages.bind(3, m_sessionID.getTargetCompID().getValue());
-			m_stmt_insert_messages.bind(4, m_sessionID.getSessionQualifier());
-			m_stmt_insert_messages.bind(5, msgSeqNum);
-			m_stmt_insert_messages.bind(6, msg.c_str()
+			m_stmt_insert_messages->bind(1, m_sessionID.getBeginString().getValue());
+			m_stmt_insert_messages->bind(2, m_sessionID.getSenderCompID().getValue());
+			m_stmt_insert_messages->bind(3, m_sessionID.getTargetCompID().getValue());
+			m_stmt_insert_messages->bind(4, m_sessionID.getSessionQualifier());
+			m_stmt_insert_messages->bind(5, msgSeqNum);
+			m_stmt_insert_messages->bind(6, msg.c_str()
 				, (msg.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(msg.size())));
 
-			query = m_stmt_insert_messages.getExpandedSQL();
+			query = m_stmt_insert_messages->getExpandedSQL();
 
 			try
 			{
-				m_stmt_insert_messages.exec();
+				m_stmt_insert_messages->exec();
 			}
 			catch (std::exception&)
 			{
-				SQLiteStatementReset stmt_reset(m_stmt_update_messages);
+				SQLiteStatementReset stmt_reset(*m_stmt_update_messages);
 
-				m_stmt_update_messages.bind(1, msg.c_str()
+				m_stmt_update_messages->bind(1, msg.c_str()
 					, (msg.size() > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : static_cast<int>(msg.size())));
-				m_stmt_update_messages.bind(2, m_sessionID.getBeginString().getValue());
-				m_stmt_update_messages.bind(3, m_sessionID.getSenderCompID().getValue());
-				m_stmt_update_messages.bind(4, m_sessionID.getTargetCompID().getValue());
-				m_stmt_update_messages.bind(5, m_sessionID.getSessionQualifier());
+				m_stmt_update_messages->bind(2, m_sessionID.getBeginString().getValue());
+				m_stmt_update_messages->bind(3, m_sessionID.getSenderCompID().getValue());
+				m_stmt_update_messages->bind(4, m_sessionID.getTargetCompID().getValue());
+				m_stmt_update_messages->bind(5, m_sessionID.getSessionQualifier());
 
-				query = m_stmt_update_messages.getExpandedSQL();
+				query = m_stmt_update_messages->getExpandedSQL();
 
-				m_stmt_update_messages.exec();
+				m_stmt_update_messages->exec();
 			}
 		}
 		catch (std::exception & e)
@@ -156,20 +157,20 @@ namespace FIX
 
 		try
 		{
-			SQLiteStatementReset stmt_reset(m_stmt_select_messages);
+			SQLiteStatementReset stmt_reset(*m_stmt_select_messages);
 
-			m_stmt_select_messages.bind(1, m_sessionID.getBeginString().getValue());
-			m_stmt_select_messages.bind(2, m_sessionID.getSenderCompID().getValue());
-			m_stmt_select_messages.bind(3, m_sessionID.getTargetCompID().getValue());
-			m_stmt_select_messages.bind(4, m_sessionID.getSessionQualifier());
-			m_stmt_select_messages.bind(5, begin);
-			m_stmt_select_messages.bind(6, end);
+			m_stmt_select_messages->bind(1, m_sessionID.getBeginString().getValue());
+			m_stmt_select_messages->bind(2, m_sessionID.getSenderCompID().getValue());
+			m_stmt_select_messages->bind(3, m_sessionID.getTargetCompID().getValue());
+			m_stmt_select_messages->bind(4, m_sessionID.getSessionQualifier());
+			m_stmt_select_messages->bind(5, begin);
+			m_stmt_select_messages->bind(6, end);
 
-			query = m_stmt_select_messages.getExpandedSQL();
+			query = m_stmt_select_messages->getExpandedSQL();
 
-			while (m_stmt_select_messages.executeStep())
+			while (m_stmt_select_messages->executeStep())
 			{
-				SQLite::Column col = m_stmt_select_messages.getColumn(0);
+				SQLite::Column col = m_stmt_select_messages->getColumn(0);
 				const void* msg_blob = col.getBlob();
 				auto msg_blob_size = col.getBytes();
 				std::string msg(static_cast<const char*>(msg_blob), static_cast<const char*>(msg_blob) + msg_blob_size);
@@ -198,16 +199,16 @@ namespace FIX
 
 		try
 		{
-			SQLiteStatementReset stmt_reset(m_stmt_update_outgoing_seqnum);
-			m_stmt_update_outgoing_seqnum.bind(1, value);
-			m_stmt_update_outgoing_seqnum.bind(2, m_sessionID.getBeginString().getValue());
-			m_stmt_update_outgoing_seqnum.bind(3, m_sessionID.getSenderCompID().getValue());
-			m_stmt_update_outgoing_seqnum.bind(4, m_sessionID.getTargetCompID().getValue());
-			m_stmt_update_outgoing_seqnum.bind(5, m_sessionID.getSessionQualifier());
+			SQLiteStatementReset stmt_reset(*m_stmt_update_outgoing_seqnum);
+			m_stmt_update_outgoing_seqnum->bind(1, value);
+			m_stmt_update_outgoing_seqnum->bind(2, m_sessionID.getBeginString().getValue());
+			m_stmt_update_outgoing_seqnum->bind(3, m_sessionID.getSenderCompID().getValue());
+			m_stmt_update_outgoing_seqnum->bind(4, m_sessionID.getTargetCompID().getValue());
+			m_stmt_update_outgoing_seqnum->bind(5, m_sessionID.getSessionQualifier());
 
-			query = m_stmt_update_outgoing_seqnum.getExpandedSQL();
+			query = m_stmt_update_outgoing_seqnum->getExpandedSQL();
 
-			m_stmt_update_outgoing_seqnum.exec();
+			m_stmt_update_outgoing_seqnum->exec();
 
 			m_cache.setNextSenderMsgSeqNum(value);
 		}
@@ -223,17 +224,17 @@ namespace FIX
 
 		try
 		{
-			SQLiteStatementReset stmt_reset(m_stmt_update_incoming_seqnum);
+			SQLiteStatementReset stmt_reset(*m_stmt_update_incoming_seqnum);
 
-			m_stmt_update_incoming_seqnum.bind(1, value);
-			m_stmt_update_incoming_seqnum.bind(2, m_sessionID.getBeginString().getValue());
-			m_stmt_update_incoming_seqnum.bind(3, m_sessionID.getSenderCompID().getValue());
-			m_stmt_update_incoming_seqnum.bind(4, m_sessionID.getTargetCompID().getValue());
-			m_stmt_update_incoming_seqnum.bind(5, m_sessionID.getSessionQualifier());
+			m_stmt_update_incoming_seqnum->bind(1, value);
+			m_stmt_update_incoming_seqnum->bind(2, m_sessionID.getBeginString().getValue());
+			m_stmt_update_incoming_seqnum->bind(3, m_sessionID.getSenderCompID().getValue());
+			m_stmt_update_incoming_seqnum->bind(4, m_sessionID.getTargetCompID().getValue());
+			m_stmt_update_incoming_seqnum->bind(5, m_sessionID.getSessionQualifier());
 
-			query = m_stmt_update_incoming_seqnum.getExpandedSQL();
+			query = m_stmt_update_incoming_seqnum->getExpandedSQL();
 
-			m_stmt_update_incoming_seqnum.exec();
+			m_stmt_update_incoming_seqnum->exec();
 
 			m_cache.setNextTargetMsgSeqNum(value);
 		}
@@ -266,15 +267,15 @@ namespace FIX
 
 		try
 		{
-			SQLiteStatementReset stmt_reset(m_stmt_delete_messages);
-			m_stmt_delete_messages.bind(1, m_sessionID.getBeginString().getValue());
-			m_stmt_delete_messages.bind(2, m_sessionID.getSenderCompID().getValue());
-			m_stmt_delete_messages.bind(3, m_sessionID.getTargetCompID().getValue());
-			m_stmt_delete_messages.bind(4, m_sessionID.getSessionQualifier());
+			SQLiteStatementReset stmt_reset(*m_stmt_delete_messages);
+			m_stmt_delete_messages->bind(1, m_sessionID.getBeginString().getValue());
+			m_stmt_delete_messages->bind(2, m_sessionID.getSenderCompID().getValue());
+			m_stmt_delete_messages->bind(3, m_sessionID.getTargetCompID().getValue());
+			m_stmt_delete_messages->bind(4, m_sessionID.getSessionQualifier());
 
-			query = m_stmt_delete_messages.getExpandedSQL();
+			query = m_stmt_delete_messages->getExpandedSQL();
 
-			m_stmt_delete_messages.exec();
+			m_stmt_delete_messages->exec();
 		}
 		catch (std::exception & e)
 		{
@@ -294,18 +295,18 @@ namespace FIX
 
 		try
 		{
-			SQLiteStatementReset stmt_reset(m_stmt_update_sessions);
-			m_stmt_update_sessions.bind(1, sqlTime);
-			m_stmt_update_sessions.bind(2, m_cache.getNextTargetMsgSeqNum());
-			m_stmt_update_sessions.bind(3, m_cache.getNextSenderMsgSeqNum());
-			m_stmt_update_sessions.bind(4, m_sessionID.getBeginString().getValue());
-			m_stmt_update_sessions.bind(5, m_sessionID.getSenderCompID().getValue());
-			m_stmt_update_sessions.bind(6, m_sessionID.getTargetCompID().getValue());
-			m_stmt_update_sessions.bind(7, m_sessionID.getSessionQualifier());
+			SQLiteStatementReset stmt_reset(*m_stmt_update_sessions);
+			m_stmt_update_sessions->bind(1, sqlTime);
+			m_stmt_update_sessions->bind(2, m_cache.getNextTargetMsgSeqNum());
+			m_stmt_update_sessions->bind(3, m_cache.getNextSenderMsgSeqNum());
+			m_stmt_update_sessions->bind(4, m_sessionID.getBeginString().getValue());
+			m_stmt_update_sessions->bind(5, m_sessionID.getSenderCompID().getValue());
+			m_stmt_update_sessions->bind(6, m_sessionID.getTargetCompID().getValue());
+			m_stmt_update_sessions->bind(7, m_sessionID.getSessionQualifier());
 
-			query = m_stmt_update_sessions.getExpandedSQL();
+			query = m_stmt_update_sessions->getExpandedSQL();
 
-			m_stmt_update_sessions.exec();
+			m_stmt_update_sessions->exec();
 		}
 		catch (std::exception & e)
 		{
@@ -329,14 +330,14 @@ namespace FIX
 
 		try
 		{
-			SQLiteStatementReset stmt_reset(m_stmt_select_sessions);
+			SQLiteStatementReset stmt_reset(*m_stmt_select_sessions);
 
-			m_stmt_select_sessions.bind(1, m_sessionID.getBeginString().getValue());
-			m_stmt_select_sessions.bind(2, m_sessionID.getSenderCompID().getValue());
-			m_stmt_select_sessions.bind(3, m_sessionID.getTargetCompID().getValue());
-			m_stmt_select_sessions.bind(4, m_sessionID.getSessionQualifier());
+			m_stmt_select_sessions->bind(1, m_sessionID.getBeginString().getValue());
+			m_stmt_select_sessions->bind(2, m_sessionID.getSenderCompID().getValue());
+			m_stmt_select_sessions->bind(3, m_sessionID.getTargetCompID().getValue());
+			m_stmt_select_sessions->bind(4, m_sessionID.getSessionQualifier());
 
-			while (m_stmt_select_sessions.executeStep())
+			while (m_stmt_select_sessions->executeStep())
 			{
 				++rows;
 
@@ -345,9 +346,9 @@ namespace FIX
 					break;
 				}
 
-				std::string sqlTime = m_stmt_select_sessions.getColumn(0).getText();
-				incoming_seqnum = m_stmt_select_sessions.getColumn(1).getInt();
-				outgoing_seqnum = m_stmt_select_sessions.getColumn(2).getInt();
+				std::string sqlTime = m_stmt_select_sessions->getColumn(0).getText();
+				incoming_seqnum = m_stmt_select_sessions->getColumn(1).getInt();
+				outgoing_seqnum = m_stmt_select_sessions->getColumn(2).getInt();
 
 				::strptime(sqlTime.c_str(), "%Y-%m-%d %H:%M:%S", &time);
 			}
@@ -377,19 +378,19 @@ namespace FIX
 			STRING_SPRINTF(sqlTime, "%d-%02d-%02d %02d:%02d:%02d",
 				year, month, day, hour, minute, second);
 
-			SQLiteStatementReset stmt_reset(m_stmt_insert_sessions);
+			SQLiteStatementReset stmt_reset(*m_stmt_insert_sessions);
 
-			m_stmt_insert_sessions.bind(1, m_sessionID.getBeginString().getValue());
-			m_stmt_insert_sessions.bind(2, m_sessionID.getSenderCompID().getValue());
-			m_stmt_insert_sessions.bind(3, m_sessionID.getTargetCompID().getValue());
-			m_stmt_insert_sessions.bind(4, m_sessionID.getSessionQualifier());
-			m_stmt_insert_sessions.bind(5, sqlTime);
-			m_stmt_insert_sessions.bind(6, m_cache.getNextTargetMsgSeqNum());
-			m_stmt_insert_sessions.bind(7, m_cache.getNextSenderMsgSeqNum());
+			m_stmt_insert_sessions->bind(1, m_sessionID.getBeginString().getValue());
+			m_stmt_insert_sessions->bind(2, m_sessionID.getSenderCompID().getValue());
+			m_stmt_insert_sessions->bind(3, m_sessionID.getTargetCompID().getValue());
+			m_stmt_insert_sessions->bind(4, m_sessionID.getSessionQualifier());
+			m_stmt_insert_sessions->bind(5, sqlTime);
+			m_stmt_insert_sessions->bind(6, m_cache.getNextTargetMsgSeqNum());
+			m_stmt_insert_sessions->bind(7, m_cache.getNextSenderMsgSeqNum());
 
 			try
 			{
-				m_stmt_insert_sessions.exec();
+				m_stmt_insert_sessions->exec();
 			}
 			catch (std::exception&)
 			{

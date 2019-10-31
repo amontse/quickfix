@@ -9,6 +9,7 @@
 #include "MessageStore.h"
 #include "SessionSettings.h"
 #include "SQLiteCpp/SQLiteCpp.h"
+#include <memory>
 #include <string>
 
 namespace FIX
@@ -80,15 +81,15 @@ namespace FIX
 		MemoryStore m_cache;
 		SessionID m_sessionID;
 		SQLite::Database m_db;
-		mutable SQLite::Statement m_stmt_insert_messages;
-		mutable SQLite::Statement m_stmt_update_messages;
-		mutable SQLite::Statement m_stmt_select_messages;
-		mutable SQLite::Statement m_stmt_update_outgoing_seqnum;
-		mutable SQLite::Statement m_stmt_update_incoming_seqnum;
-		mutable SQLite::Statement m_stmt_delete_messages;
-		mutable SQLite::Statement m_stmt_update_sessions;
-		mutable SQLite::Statement m_stmt_select_sessions;
-		mutable SQLite::Statement m_stmt_insert_sessions;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_insert_messages;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_update_messages;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_select_messages;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_update_outgoing_seqnum;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_update_incoming_seqnum;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_delete_messages;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_update_sessions;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_select_sessions;
+		mutable std::unique_ptr<SQLite::Statement> m_stmt_insert_sessions;
 	};
 } // namespace FIX
 
