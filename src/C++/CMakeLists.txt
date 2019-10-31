@@ -25,7 +25,6 @@ set(quickfix_SOURCES
   MessageStore.cpp
   MySQLLog.cpp
   MySQLStore.cpp
-  SQLiteStore.cpp
   NullStore.cpp
   OdbcLog.cpp
   OdbcStore.cpp
